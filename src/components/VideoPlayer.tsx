@@ -11,6 +11,8 @@ interface VideoPlayerProps {
   commentMode?: boolean;
   pendingClick?: { x: number; y: number; timestamp: number; frame: string } | null;
   videoRect?: { x: number; y: number; width: number; height: number } | null;
+  onToggleCommentMode?: () => void;
+  commentModeActive?: boolean;
 }
 
 export function VideoPlayer({
@@ -19,6 +21,8 @@ export function VideoPlayer({
   commentMode = false,
   pendingClick,
   videoRect,
+  onToggleCommentMode,
+  commentModeActive = false,
 }: VideoPlayerProps) {
   const {
     videoRef,
@@ -126,6 +130,18 @@ export function VideoPlayer({
 
   return (
     <div className="video-player-container" ref={containerRef} onClick={handleContainerClick} onMouseMove={handleMouseMove}>
+      <div className="video-top-bar">
+        <span className="video-title">Video Player</span>
+        <button
+          className={`comment-toggle-btn ${commentModeActive ? 'active' : ''}`}
+          onClick={onToggleCommentMode}
+          disabled={!videoSrc}
+          title={commentModeActive ? 'Cancel comment mode' : 'Add comment'}
+        >
+          <span className="btn-icon">💬</span>
+          <span className="btn-text">{commentModeActive ? 'Cancel Comment' : 'Add Comment'}</span>
+        </button>
+      </div>
       <div className="video-wrapper">
         <video
           ref={videoRef}

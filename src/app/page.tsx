@@ -94,15 +94,6 @@ export default function Home() {
               <span>Select Video</span>
             </label>
           )}
-          {videoSrc && (
-            <button
-              className="comment-btn"
-              onClick={() => setCommentMode(!commentMode)}
-              disabled={commentMode && !!pendingClick}
-            >
-              {commentMode && pendingClick ? 'Comment Pending...' : commentMode ? 'Cancel Comment' : 'Add Comment'}
-            </button>
-          )}
         </div>
       </header>
 
@@ -113,6 +104,8 @@ export default function Home() {
           pendingClick={pendingClick}
           videoRect={renderedRect}
           onAnnotationClick={handleAnnotationClick}
+          onToggleCommentMode={() => setCommentMode(!commentMode)}
+          commentModeActive={commentMode}
         />
 
         {pendingClick && commentMode && (
