@@ -45,6 +45,14 @@ export function VideoPlayer({
   const fileInput = useRef<HTMLInputElement>(null);
   const [renderedRect, setRenderedRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [hoverCoords, setHoverCoords] = useState<NormalizedCoordinates | null>(null);
+  const [pinPosition, setPinPosition] = useState<{ x: number; y: number } | null>(null);
+
+  // Clear pin when comment mode is disabled
+  useEffect(() => {
+    if (!commentMode) {
+      setPinPosition(null);
+    }
+  }, [commentMode]);
 
   useEffect(() => {
     const updateRect = () => {
@@ -83,6 +91,9 @@ export function VideoPlayer({
     const coords = getNormalizedCoordinates(e.clientX, e.clientY, renderedRect, containerRect);
     
     if (coords) {
+      // Show pin immediately
+      setPinPosition({ x: coords.x, y: coords.y });
+      // Capture frame and trigger comment modal
       const frame = captureFrame();
       if (frame) {
         onAnnotationClick(coords, videoRef.current.currentTime, frame);
@@ -143,7 +154,10 @@ export function VideoPlayer({
         </button>
       </div>
       <div className="video-area">
-        <div className="video-wrapper">
+        <div 
+          className="video-wrapper"
+          style={{ cursor: commentMode ? 'crosshair' : 'default' }}
+        >
           <video
             ref={videoRef}
             src={videoSrc}
@@ -184,6 +198,17 @@ export function VideoPlayer({
               </div>
             )
           ))}
+          {pinPosition && renderedRect && (
+            <div
+              className="pin-marker"
+              style={{
+                left: `${renderedRect.x + pinPosition.x * renderedRect.width - 12}px`,
+                top: `${renderedRect.y + pinPosition.y * renderedRect.height - 24}px`,
+              }}
+            >
+              <span className="pin-icon">📍</span>
+            </div>
+          )}
           {pendingClick && renderedRect && (
             <div
               className="pending-marker"
