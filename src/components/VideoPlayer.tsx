@@ -87,7 +87,7 @@ export function VideoPlayer({
     };
   }, []);
 
-  const handleContainerClick = (e: MouseEvent<HTMLDivElement>) => {
+  const handleContainerClick = (e: MouseEvent<HTMLDivElement> | MouseEvent<HTMLVideoElement>) => {
     if (!commentMode || !onAnnotationClick || !videoRef.current) return;
 
     const container = containerRef.current;
@@ -172,6 +172,8 @@ export function VideoPlayer({
             onPause={handlePause}
             playsInline
             className="video-element"
+            style={{ pointerEvents: commentMode ? 'none' : 'auto' }}
+            onClick={commentMode ? handleContainerClick : undefined}
           />
           {commentMode && renderedRect && (
             <div
