@@ -161,7 +161,6 @@ export function VideoPlayer({
         <div 
           className="video-wrapper"
           style={{ cursor: commentMode ? 'crosshair' : 'default' }}
-          onClick={handleContainerClick}
         >
           <video
             ref={videoRef}
@@ -172,9 +171,19 @@ export function VideoPlayer({
             onPause={handlePause}
             playsInline
             className="video-element"
-            style={{ pointerEvents: commentMode ? 'none' : 'auto' }}
-            onClick={commentMode ? handleContainerClick : undefined}
+            style={{ pointerEvents: 'none' }}
           />
+          {commentMode && (
+            <div
+              className="click-capture-overlay"
+              onClick={handleContainerClick}
+              style={{
+                position: 'absolute',
+                inset: 0,
+                zIndex: 20,
+              }}
+            />
+          )}
           {commentMode && renderedRect && (
             <div
               className="click-indicator"
