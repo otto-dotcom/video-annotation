@@ -1,10 +1,12 @@
 export interface Annotation {
   id: string;
+  index: number;
   timestamp: number;
   x: number;
   y: number;
   frame: string;
   comment: string;
+  color: string;
   createdAt: string;
 }
 

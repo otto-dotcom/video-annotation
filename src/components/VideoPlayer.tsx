@@ -4,23 +4,36 @@ import { useRef, useEffect, useState, MouseEvent, ChangeEvent } from 'react';
 import { useVideo } from '@/hooks/useVideo';
 import { getRenderedVideoRect, getNormalizedCoordinates, formatTime } from '@/lib/coordinates';
 import { NormalizedCoordinates } from '@/types/annotation';
-import { CommentInput } from './CommentInput';
+
+const MARKER_COLORS = [
+  '#FF4757', '#00D4AA', '#FFA502', '#747D8C', '#5352ED',
+  '#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#F38181',
+];
 
 interface VideoPlayerProps {
-  onAnnotationClick?: (coords: NormalizedCoordinates, timestamp: number, frame: string, comment: string) => void;
-  annotations?: Array<{ id: string; x: number; y: number; timestamp: number }>;
+  annotations: Array<{ 
+    id: string; 
+    index: number;
+    x: number; 
+    y: number; 
+    timestamp: number; 
+    color: string;
+  }>;
   commentMode?: boolean;
-  pendingClick?: { x: number; y: number; timestamp: number; frame: string } | null;
+  selectedIndex?: number | null;
+  onAnnotationClick?: (coords: NormalizedCoordinates, timestamp: number, frame: string, index: number) => void;
+  onSelectAnnotation?: (index: number) => void;
   videoRect?: { x: number; y: number; width: number; height: number } | null;
   onToggleCommentMode?: () => void;
   commentModeActive?: boolean;
 }
 
 export function VideoPlayer({
-  onAnnotationClick,
   annotations = [],
   commentMode = false,
-  pendingClick,
+  selectedIndex = null,
+  onAnnotationClick,
+  onSelectAnnotation,
   videoRect,
   onToggleCommentMode,
   commentModeActive = false,
@@ -46,22 +59,6 @@ export function VideoPlayer({
   const fileInput = useRef<HTMLInputElement>(null);
   const [renderedRect, setRenderedRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [hoverCoords, setHoverCoords] = useState<NormalizedCoordinates | null>(null);
-  const [pinPosition, setPinPosition] = useState<{ x: number; y: number } | null>(null);
-  const [pendingClickData, setPendingClickData] = useState<{
-    x: number;
-    y: number;
-    timestamp: number;
-    frame: string;
-    coords: NormalizedCoordinates;
-  } | null>(null);
-
-  // Clear pin when comment mode is disabled
-  useEffect(() => {
-    if (!commentMode) {
-      setPinPosition(null);
-      setPendingClickData(null);
-    }
-  }, [commentMode]);
 
   useEffect(() => {
     const updateRect = () => {
@@ -100,18 +97,10 @@ export function VideoPlayer({
     const coords = getNormalizedCoordinates(e.clientX, e.clientY, renderedRect, containerRect);
     
     if (coords) {
-      // Show pin immediately
-      setPinPosition({ x: coords.x, y: coords.y });
-      // Capture frame and store data for inline comment card
       const frame = captureFrame();
       if (frame) {
-        setPendingClickData({
-          x: coords.x,
-          y: coords.y,
-          timestamp: videoRef.current.currentTime,
-          frame,
-          coords,
-        });
+        const newIndex = annotations.length;
+        onAnnotationClick(coords, videoRef.current.currentTime, frame, newIndex);
       }
     }
   };
@@ -155,7 +144,7 @@ export function VideoPlayer({
   }
 
   return (
-    <div className="video-player-container" ref={containerRef} onClick={handleContainerClick} onMouseMove={handleMouseMove}>
+    <div className="video-player-container" ref={containerRef} onMouseMove={handleMouseMove}>
       <div className="video-top-bar">
         <span className="video-title">Video Player</span>
         <button
@@ -199,62 +188,23 @@ export function VideoPlayer({
             renderedRect && (
               <div
                 key={annotation.id}
-                className="annotation-marker"
+                className={`numbered-marker ${selectedIndex === annotation.index ? 'selected' : ''}`}
                 style={{
-                  left: `${renderedRect.x + annotation.x * renderedRect.width - 8}px`,
-                  top: `${renderedRect.y + annotation.y * renderedRect.height - 8}px`,
-                }}
+                  left: `${renderedRect.x + annotation.x * renderedRect.width - 14}px`,
+                  top: `${renderedRect.y + annotation.y * renderedRect.height - 14}px`,
+                  '--marker-color': annotation.color,
+                } as React.CSSProperties}
                 onClick={(e) => {
                   e.stopPropagation();
+                  onSelectAnnotation?.(annotation.index);
                   seek(annotation.timestamp);
                 }}
                 title={`${formatTime(annotation.timestamp)} - Click to seek`}
               >
-                <span className="marker-dot" />
+                <span className="marker-number">{annotation.index + 1}</span>
               </div>
             )
           ))}
-          {pinPosition && renderedRect && (
-            <div
-              className="pin-marker"
-              style={{
-                left: `${renderedRect.x + pinPosition.x * renderedRect.width - 12}px`,
-                top: `${renderedRect.y + pinPosition.y * renderedRect.height - 24}px`,
-              }}
-            >
-              <span className="pin-icon">📍</span>
-            </div>
-          )}
-          {pendingClickData && renderedRect && (
-            <CommentInput
-              timestamp={pendingClickData.timestamp}
-              coords={pendingClickData.coords}
-              frame={pendingClickData.frame}
-              onSubmit={(comment) => {
-                onAnnotationClick?.(pendingClickData.coords, pendingClickData.timestamp, pendingClickData.frame, comment);
-                setPendingClickData(null);
-                setPinPosition(null);
-              }}
-              onCancel={() => {
-                setPendingClickData(null);
-                setPinPosition(null);
-              }}
-              formatTime={formatTime}
-              position={{ x: pendingClickData.x, y: pendingClickData.y }}
-              renderedRect={renderedRect}
-            />
-          )}
-          {pendingClick && renderedRect && (
-            <div
-              className="pending-marker"
-              style={{
-                left: `${renderedRect.x + pendingClick.x * renderedRect.width - 10}px`,
-                top: `${renderedRect.y + pendingClick.y * renderedRect.height - 10}px`,
-              }}
-            >
-              <span className="pending-dot" />
-            </div>
-          )}
         </div>
       </div>
 
