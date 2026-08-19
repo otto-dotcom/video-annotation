@@ -55,6 +55,7 @@ export function VideoPlayer({
     handlePause,
   } = useVideo();
 
+  const videoWrapperRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const [renderedRect, setRenderedRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
@@ -63,12 +64,11 @@ export function VideoPlayer({
   useEffect(() => {
     const updateRect = () => {
       const video = videoRef.current;
-      const container = containerRef.current;
-      if (video && container) {
-        const containerRect = container.getBoundingClientRect();
-        const rect = getRenderedVideoRect(video, containerRect);
-        setRenderedRect(rect);
-      }
+      const wrapper = videoWrapperRef.current;
+      if (!video || !wrapper) return;
+      const wrapperRect = wrapper.getBoundingClientRect();
+      const rect = getRenderedVideoRect(video, wrapperRect);
+      setRenderedRect(rect.width > 0 && rect.height > 0 ? rect : null);
     };
 
     const video = videoRef.current;
@@ -85,16 +85,16 @@ export function VideoPlayer({
       }
       window.removeEventListener('resize', updateRect);
     };
-  }, []);
+  }, [videoSrc]);
 
   const handleContainerClick = (e: MouseEvent<HTMLDivElement> | MouseEvent<HTMLVideoElement>) => {
     if (!commentMode || !onAnnotationClick || !videoRef.current) return;
 
-    const container = containerRef.current;
-    if (!container || !renderedRect) return;
+    const wrapper = videoWrapperRef.current;
+    if (!wrapper || !renderedRect) return;
 
-    const containerRect = container.getBoundingClientRect();
-    const coords = getNormalizedCoordinates(e.clientX, e.clientY, renderedRect, containerRect);
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const coords = getNormalizedCoordinates(e.clientX, e.clientY, renderedRect, wrapperRect);
     
     if (coords) {
       const frame = captureFrame();
@@ -106,10 +106,10 @@ export function VideoPlayer({
   };
 
   const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
-    if (!renderedRect || !containerRef.current) return;
+    if (!renderedRect || !videoWrapperRef.current) return;
     
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const coords = getNormalizedCoordinates(e.clientX, e.clientY, renderedRect, containerRect);
+    const wrapperRect = videoWrapperRef.current.getBoundingClientRect();
+    const coords = getNormalizedCoordinates(e.clientX, e.clientY, renderedRect, wrapperRect);
     setHoverCoords(coords);
   };
 
@@ -144,7 +144,7 @@ export function VideoPlayer({
   }
 
   return (
-    <div className="video-player-container" ref={containerRef} onMouseMove={handleMouseMove}>
+    <div className="video-player-container" ref={containerRef}>
       <div className="video-top-bar">
         <span className="video-title">Video Player</span>
         <button
@@ -160,7 +160,9 @@ export function VideoPlayer({
       <div className="video-area">
         <div 
           className="video-wrapper"
+          ref={videoWrapperRef}
           style={{ cursor: commentMode ? 'crosshair' : 'default' }}
+          onMouseMove={handleMouseMove}
         >
           <video
             ref={videoRef}
