@@ -157,6 +157,7 @@ export function VideoPlayer({
         <div 
           className="video-wrapper"
           style={{ cursor: commentMode ? 'crosshair' : 'default' }}
+          onClick={handleContainerClick}
         >
           <video
             ref={videoRef}
