@@ -4,9 +4,10 @@ import { useRef, useEffect, useState, MouseEvent, ChangeEvent } from 'react';
 import { useVideo } from '@/hooks/useVideo';
 import { getRenderedVideoRect, getNormalizedCoordinates, formatTime } from '@/lib/coordinates';
 import { NormalizedCoordinates } from '@/types/annotation';
+import { CommentInput } from './CommentInput';
 
 interface VideoPlayerProps {
-  onAnnotationClick?: (coords: NormalizedCoordinates, timestamp: number, frame: string) => void;
+  onAnnotationClick?: (coords: NormalizedCoordinates, timestamp: number, frame: string, comment: string) => void;
   annotations?: Array<{ id: string; x: number; y: number; timestamp: number }>;
   commentMode?: boolean;
   pendingClick?: { x: number; y: number; timestamp: number; frame: string } | null;
@@ -46,11 +47,19 @@ export function VideoPlayer({
   const [renderedRect, setRenderedRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
   const [hoverCoords, setHoverCoords] = useState<NormalizedCoordinates | null>(null);
   const [pinPosition, setPinPosition] = useState<{ x: number; y: number } | null>(null);
+  const [pendingClickData, setPendingClickData] = useState<{
+    x: number;
+    y: number;
+    timestamp: number;
+    frame: string;
+    coords: NormalizedCoordinates;
+  } | null>(null);
 
   // Clear pin when comment mode is disabled
   useEffect(() => {
     if (!commentMode) {
       setPinPosition(null);
+      setPendingClickData(null);
     }
   }, [commentMode]);
 
@@ -93,10 +102,16 @@ export function VideoPlayer({
     if (coords) {
       // Show pin immediately
       setPinPosition({ x: coords.x, y: coords.y });
-      // Capture frame and trigger comment modal
+      // Capture frame and store data for inline comment card
       const frame = captureFrame();
       if (frame) {
-        onAnnotationClick(coords, videoRef.current.currentTime, frame);
+        setPendingClickData({
+          x: coords.x,
+          y: coords.y,
+          timestamp: videoRef.current.currentTime,
+          frame,
+          coords,
+        });
       }
     }
   };
@@ -209,6 +224,25 @@ export function VideoPlayer({
             >
               <span className="pin-icon">📍</span>
             </div>
+          )}
+          {pendingClickData && renderedRect && (
+            <CommentInput
+              timestamp={pendingClickData.timestamp}
+              coords={pendingClickData.coords}
+              frame={pendingClickData.frame}
+              onSubmit={(comment) => {
+                onAnnotationClick?.(pendingClickData.coords, pendingClickData.timestamp, pendingClickData.frame, comment);
+                setPendingClickData(null);
+                setPinPosition(null);
+              }}
+              onCancel={() => {
+                setPendingClickData(null);
+                setPinPosition(null);
+              }}
+              formatTime={formatTime}
+              position={{ x: pendingClickData.x, y: pendingClickData.y }}
+              renderedRect={renderedRect}
+            />
           )}
           {pendingClick && renderedRect && (
             <div

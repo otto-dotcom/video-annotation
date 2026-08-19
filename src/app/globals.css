@@ -309,6 +309,133 @@ html, body {
   }
 }
 
+.comment-input-card-inline {
+  position: absolute;
+  z-index: 30;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 8px 32px var(--shadow);
+  min-width: 280px;
+  max-width: 340px;
+  animation: cardPop 0.15s ease-out;
+}
+
+@keyframes cardPop {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.comment-input-card-inline .comment-preview {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.comment-input-card-inline .frame-thumbnail {
+  width: 64px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.comment-input-card-inline .preview-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.comment-input-card-inline .timestamp {
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+.comment-input-card-inline .coords {
+  font-size: 10px;
+  color: var(--fg-muted);
+}
+
+.comment-input-card-inline .comment-textarea-inline {
+  width: 100%;
+  min-height: 50px;
+  padding: 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--fg-primary);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+  resize: vertical;
+  outline: none;
+}
+
+.comment-input-card-inline .comment-textarea-inline:focus {
+  border-color: var(--accent);
+}
+
+.comment-input-card-inline .comment-textarea-inline::placeholder {
+  color: var(--fg-muted);
+}
+
+.comment-actions-inline {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.comment-actions-inline .btn-cancel,
+.comment-actions-inline .btn-submit {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.comment-actions-inline .btn-cancel {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  color: var(--fg-primary);
+}
+
+.comment-actions-inline .btn-cancel:hover {
+  background: var(--border-light);
+}
+
+.comment-actions-inline .btn-submit {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--bg-primary);
+}
+
+.comment-actions-inline .btn-submit:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+.comment-actions-inline .btn-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .video-controls {
   display: flex;
   align-items: center;

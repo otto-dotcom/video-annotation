@@ -6,7 +6,6 @@ import { useVideo } from '@/hooks/useVideo';
 import { useAnnotations } from '@/hooks/useAnnotations';
 import { formatTime, generateId } from '@/lib/coordinates';
 import { VideoPlayer } from '@/components/VideoPlayer';
-import { CommentInput } from '@/components/CommentInput';
 import { AnnotationList } from '@/components/AnnotationList';
 import { DebugPanel } from '@/components/DebugPanel';
 
@@ -31,40 +30,23 @@ export default function Home() {
   const { annotations, isLoaded, createAnnotation, removeAnnotation, clearAll } = useAnnotations();
 
   const [commentMode, setCommentMode] = useState(false);
-  const [pendingClick, setPendingClick] = useState<{
-    x: number;
-    y: number;
-    timestamp: number;
-    frame: string;
-  } | null>(null);
   const [renderedRect, setRenderedRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
-  const handleAnnotationClick = useCallback((coords: { x: number; y: number }, timestamp: number, frame: string) => {
-    setPendingClick({ x: coords.x, y: coords.y, timestamp, frame });
-  }, []);
-
-  const handleCommentSubmit = useCallback((comment: string) => {
-    if (!pendingClick) return;
-
-    const annotation: Annotation = {
-      id: generateId(),
-      timestamp: pendingClick.timestamp,
-      x: pendingClick.x,
-      y: pendingClick.y,
-      frame: pendingClick.frame,
-      comment,
-      createdAt: new Date().toISOString(),
-    };
-
-    createAnnotation(annotation);
-    setPendingClick(null);
-    setCommentMode(false);
-  }, [pendingClick, createAnnotation]);
-
-  const handleCommentCancel = useCallback(() => {
-    setPendingClick(null);
-    setCommentMode(false);
-  }, []);
+  const handleAnnotationClick = useCallback((coords: { x: number; y: number }, timestamp: number, frame: string, comment?: string) => {
+    if (comment) {
+      const annotation: Annotation = {
+        id: generateId(),
+        timestamp,
+        x: coords.x,
+        y: coords.y,
+        frame,
+        comment,
+        createdAt: new Date().toISOString(),
+      };
+      createAnnotation(annotation);
+      setCommentMode(false);
+    }
+  }, [createAnnotation]);
 
   const handleSeek = useCallback((timestamp: number) => {
     seek(timestamp);
@@ -79,7 +61,6 @@ export default function Home() {
     if (file) {
       loadVideo(file);
       setCommentMode(false);
-      setPendingClick(null);
     }
   };
 
@@ -101,23 +82,12 @@ export default function Home() {
         <VideoPlayer
           annotations={annotations.map(a => ({ id: a.id, x: a.x, y: a.y, timestamp: a.timestamp }))}
           commentMode={commentMode}
-          pendingClick={pendingClick}
+          pendingClick={null}
           videoRect={renderedRect}
           onAnnotationClick={handleAnnotationClick}
           onToggleCommentMode={() => setCommentMode(!commentMode)}
           commentModeActive={commentMode}
         />
-
-        {pendingClick && commentMode && (
-          <CommentInput
-            timestamp={pendingClick.timestamp}
-            coords={{ x: pendingClick.x, y: pendingClick.y }}
-            frame={pendingClick.frame}
-            onSubmit={handleCommentSubmit}
-            onCancel={handleCommentCancel}
-            formatTime={formatTime}
-          />
-        )}
 
         <div className="sidebar">
           <AnnotationList
@@ -135,7 +105,7 @@ export default function Home() {
         duration={duration}
         videoMetadata={videoMetadata}
         renderedRect={renderedRect}
-        pendingClick={pendingClick}
+        pendingClick={null}
         commentMode={commentMode}
         storageCount={isLoaded ? annotations.length : 0}
       />
