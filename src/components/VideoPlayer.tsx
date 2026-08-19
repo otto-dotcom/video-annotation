@@ -142,61 +142,60 @@ export function VideoPlayer({
           <span className="btn-text">{commentModeActive ? 'Cancel Comment' : 'Add Comment'}</span>
         </button>
       </div>
-      <div className="video-wrapper">
-        <video
-          ref={videoRef}
-          src={videoSrc}
-          onLoadedMetadata={handleLoadedMetadata}
-          onTimeUpdate={handleTimeUpdate}
-          onPlay={handlePlay}
-          onPause={handlePause}
-          playsInline
-          style={{
-            width: renderedRect ? `${renderedRect.width}px` : '100%',
-            height: renderedRect ? `${renderedRect.height}px` : 'auto',
-          }}
-        />
-        {commentMode && renderedRect && (
-          <div
-            className="click-indicator"
-            style={{
-              left: `${renderedRect.x}px`,
-              top: `${renderedRect.y}px`,
-              width: `${renderedRect.width}px`,
-              height: `${renderedRect.height}px`,
-            }}
+      <div className="video-area">
+        <div className="video-wrapper">
+          <video
+            ref={videoRef}
+            src={videoSrc}
+            onLoadedMetadata={handleLoadedMetadata}
+            onTimeUpdate={handleTimeUpdate}
+            onPlay={handlePlay}
+            onPause={handlePause}
+            playsInline
+            className="video-element"
           />
-        )}
-        {annotations.map((annotation) => (
-          renderedRect && (
+          {commentMode && renderedRect && (
             <div
-              key={annotation.id}
-              className="annotation-marker"
+              className="click-indicator"
               style={{
-                left: `${renderedRect.x + annotation.x * renderedRect.width - 8}px`,
-                top: `${renderedRect.y + annotation.y * renderedRect.height - 8}px`,
+                left: `${renderedRect.x}px`,
+                top: `${renderedRect.y}px`,
+                width: `${renderedRect.width}px`,
+                height: `${renderedRect.height}px`,
               }}
-              onClick={(e) => {
-                e.stopPropagation();
-                seek(annotation.timestamp);
+            />
+          )}
+          {annotations.map((annotation) => (
+            renderedRect && (
+              <div
+                key={annotation.id}
+                className="annotation-marker"
+                style={{
+                  left: `${renderedRect.x + annotation.x * renderedRect.width - 8}px`,
+                  top: `${renderedRect.y + annotation.y * renderedRect.height - 8}px`,
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  seek(annotation.timestamp);
+                }}
+                title={`${formatTime(annotation.timestamp)} - Click to seek`}
+              >
+                <span className="marker-dot" />
+              </div>
+            )
+          ))}
+          {pendingClick && renderedRect && (
+            <div
+              className="pending-marker"
+              style={{
+                left: `${renderedRect.x + pendingClick.x * renderedRect.width - 10}px`,
+                top: `${renderedRect.y + pendingClick.y * renderedRect.height - 10}px`,
               }}
-              title={`${formatTime(annotation.timestamp)} - Click to seek`}
             >
-              <span className="marker-dot" />
+              <span className="pending-dot" />
             </div>
-          )
-        ))}
-        {pendingClick && renderedRect && (
-          <div
-            className="pending-marker"
-            style={{
-              left: `${renderedRect.x + pendingClick.x * renderedRect.width - 10}px`,
-              top: `${renderedRect.y + pendingClick.y * renderedRect.height - 10}px`,
-            }}
-          >
-            <span className="pending-dot" />
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <div className="video-controls">
